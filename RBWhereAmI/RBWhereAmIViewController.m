@@ -2,59 +2,105 @@
 //  RBWhereAmIViewController.m
 //  RBWhereAmI
 //
-//  Created by Rashmi Bajaj on 1/15/13.
-//  Copyright (c) 2013 France Telecom Group (Orange) San Francisco. All rights reserved.
-//
+
 
 #import "RBWhereAmIViewController.h"
+#import "BNRMapPoint.h"
+#define kDistanceFilter 50
 
 @implementation RBWhereAmIViewController
 
-- (void)didReceiveMemoryWarning
+-(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    
+    if (self) 
+    {
+        locationManager = [[CLLocationManager alloc] init];
+        [locationManager setDelegate:self];
+        [locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
+    }
+    return self;
 }
 
-#pragma mark - View lifecycle
-
-- (void)viewDidLoad
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
 {
-    [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+        NSLog(@"Location: %@",newLocation);
+    NSTimeInterval t = [[newLocation timestamp] timeIntervalSinceNow];
+    if (t < -180)
+    {
+        return;
+    }
+    [self foundLocation:newLocation];
+    
 }
 
-- (void)viewDidUnload
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
 {
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
+    NSLog(@"Could not find location: %@",error);
 }
 
-- (void)viewWillAppear:(BOOL)animated
+-(void)dealloc
 {
-    [super viewWillAppear:animated];
+    [locationManager setDelegate:nil];
 }
 
-- (void)viewDidAppear:(BOOL)animated
+-(void)viewDidLoad
 {
-    [super viewDidAppear:animated];
+    [worldView setShowsUserLocation:YES];
+
 }
 
-- (void)viewWillDisappear:(BOOL)animated
+- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation
 {
-	[super viewWillDisappear:animated];
+    CLLocationCoordinate2D loc = [userLocation coordinate];
+    MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(loc, 250, 250);
+    [worldView setRegion:region animated:YES];
+    
+ 
 }
 
-- (void)viewDidDisappear:(BOOL)animated
+//implemented as solution to silver challenge of chapter 5
+-(IBAction)viewType:(MKMapView*)view
 {
-	[super viewDidDisappear:animated];
+    if (segmentedControl.selectedSegmentIndex==0) 
+        [worldView setMapType:MKMapTypeStandard];
+    else if (segmentedControl.selectedSegmentIndex==1) 
+        [worldView setMapType:MKMapTypeSatellite];
+    else if (segmentedControl.selectedSegmentIndex==2) 
+        [worldView setMapType:MKMapTypeHybrid];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+-(BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-    // Return YES for supported orientations
-    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+    [self findLocation];
+    [textField resignFirstResponder];
+    return YES;
 }
+
+-(void)findLocation
+{
+    [locationManager stopUpdatingLocation];
+    [activityIndicator startAnimating];
+    [locationTitleField setHidden:YES];
+}
+
+-(void)foundLocation:(CLLocation *)loc
+{
+    CLLocationCoordinate2D coord = [loc coordinate];
+    
+    BNRMapPoint *mp = [[BNRMapPoint alloc] initWithCoordinate:coord title:[locationTitleField text]];
+    [worldView addAnnotation:mp];
+    
+    MKCoordinateRegion region =MKCoordinateRegionMakeWithDistance(coord, 250, 250);
+    [worldView setRegion:region animated:YES];
+    
+    [locationTitleField setText:@""];
+    [activityIndicator stopAnimating];
+    [locationTitleField setHidden:NO];
+    [locationManager stopUpdatingLocation];
+}
+
+
 
 @end
