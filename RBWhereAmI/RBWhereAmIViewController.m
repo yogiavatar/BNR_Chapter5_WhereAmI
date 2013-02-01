@@ -25,13 +25,21 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
 {
-        NSLog(@"Location: %@",newLocation);
+    NSLog(@"Location: %@",newLocation);
     NSTimeInterval t = [[newLocation timestamp] timeIntervalSinceNow];
+    
+    // Solution to Gold Challenge Chapter 5
+    //Extract the current date and time when the annotation is set for a map point
+    NSDate *currentDate = [newLocation timestamp];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd 'at' HH:mm"];
+    NSString *stringFromDate = [formatter stringFromDate:currentDate];
+    
     if (t < -180)
     {
         return;
     }
-    [self foundLocation:newLocation];
+    [self foundLocation:newLocation :stringFromDate];
     
 }
 
@@ -80,16 +88,16 @@
 
 -(void)findLocation
 {
-    [locationManager stopUpdatingLocation];
+    [locationManager startUpdatingLocation];
     [activityIndicator startAnimating];
     [locationTitleField setHidden:YES];
 }
 
--(void)foundLocation:(CLLocation *)loc
+-(void)foundLocation:(CLLocation *)loc :(NSString*)date
 {
     CLLocationCoordinate2D coord = [loc coordinate];
-    
-    BNRMapPoint *mp = [[BNRMapPoint alloc] initWithCoordinate:coord title:[locationTitleField text]];
+    // display the location date in the subtitle of the map point annotation ( solution to gold challenge)
+    BNRMapPoint *mp = [[BNRMapPoint alloc] initWithCoordinate:coord title:[locationTitleField text] subtitle:date];
     [worldView addAnnotation:mp];
     
     MKCoordinateRegion region =MKCoordinateRegionMakeWithDistance(coord, 250, 250);

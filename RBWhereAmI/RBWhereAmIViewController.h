@@ -24,6 +24,6 @@
 -(IBAction)viewType:(MKMapView*)view;
 
 -(void)findLocation;
--(void)foundLocation:(CLLocation *)loc;
+-(void)foundLocation:(CLLocation *)loc :(NSString*)date;
 
 @end

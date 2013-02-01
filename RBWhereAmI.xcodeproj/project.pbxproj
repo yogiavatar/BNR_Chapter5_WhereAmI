@@ -138,7 +138,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
-				ORGANIZATIONNAME = "France Telecom Group (Orange) San Francisco";
+				ORGANIZATIONNAME = "";
 			};
 			buildConfigurationList = 1FF5012216A620830039CA00 /* Build configuration list for PBXProject "RBWhereAmI" */;
 			compatibilityVersion = "Xcode 3.2";
